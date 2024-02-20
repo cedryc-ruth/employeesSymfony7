@@ -3,44 +3,58 @@
 {% block title %}Employee{% endblock %}
 
 {% block body %}
-    <h1>Employee</h1>
+    <h1>Profil</h1>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ employee.id }}</td>
-            </tr>
-            <tr>
-                <th>BirthDate</th>
-                <td>{{ employee.birthDate ? employee.birthDate|date('Y-m-d') : '' }}</td>
-            </tr>
-            <tr>
-                <th>FirstName</th>
-                <td>{{ employee.firstName }}</td>
-            </tr>
-            <tr>
-                <th>LastName</th>
-                <td>{{ employee.lastName }}</td>
-            </tr>
-            <tr>
-                <th>Gender</th>
-                <td>{{ employee.gender.value }}</td>
-            </tr>
-            <tr>
-                <th>HireDate</th>
-                <td>{{ employee.hireDate ? employee.hireDate|date('Y-m-d') : '' }}</td>
-            </tr>
-            <tr>
-                <th>Photo</th>
-                <td>{{ employee.photo }}</td>
-            </tr>
-            <tr>
-                <th>Email</th>
-                <td>{{ employee.email }}</td>
-            </tr>
-        </tbody>
-    </table>
+    <section style="width:80%">
+    {% if app.user %}
+        {% if employee.group is null %}
+        <form action="{{ path('app_employee_join', {'id': employee.id }) }}" method="post" style="float:right">
+            <select name="groupId">
+            {% for group in availableGroups %}
+                <option value="{{ group.0.code }}">{{ group.0.code }} - {{ group.0.name }}</option>
+            {% endfor %}
+            </select>
+            <button style="background-color:lightgreen; border:2px solid green;">Rejoindre</button>
+        </form>
+        {% else %}
+        <form action="{{ path('app_employee_leave', {'id': employee.id }) }}" method="post" style="float:right">
+            <button style="background-color:silver; border:2px solid gray;">Quitter</button>
+        </form>
+        {% endif %}
+    {% endif %}
+
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th>Groupe:</th>
+                    <td>{{ employee.group ? employee.group.code : '<em>Sans groupe</em>' }}</td>
+                </tr>
+                <tr>
+                    <th>N°:</th>
+                    <td>{{ employee.id }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>{{ employee.firstName }} {{ employee.lastName }}</strong></td>
+                </tr>
+                <tr>
+                    <th>Sexe:</th>
+                    <td>{{ employee.gender.value }}</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td>{{ employee.email }}</td>
+                </tr>                
+                <tr>
+                    <th>Hire date</th>
+                    <td>{{ employee.hireDate ? employee.hireDate|date('d/m/Y') : '' }}</td>
+                </tr>
+                <tr>
+                    <th>Birthday:</th>
+                    <td>{{ employee.birthDate ? employee.birthDate|date('d/m/Y') : '' }}</td>
+                </tr>                
+            </tbody>
+        </table>
+    </section>
 
     <a href="{{ path('app_employee_index') }}">back to list</a>
 

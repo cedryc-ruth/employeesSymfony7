@@ -17,7 +17,7 @@ enum Gender: string {
     case Non_Binary = 'X';
 }
 
-#[ORM\Table('employees')]
+#[ORM\Table('members')]
 #[ORM\Entity(repositoryClass: EmployeeRepository::class)]
 class Employee implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -61,6 +61,10 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    #[ORM\ManyToOne(inversedBy: 'employees')]
+    #[ORM\JoinColumn(name: 'group_code', referencedColumnName: 'code')]
+    private ?Group $_group = null;
 
     public function __construct()
     {
@@ -246,5 +250,17 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     public function isAdmin(): bool
     {
         return in_array('ROLE_ADMIN',$this->roles);
+    }
+
+    public function getGroup(): ?Group
+    {
+        return $this->_group;
+    }
+
+    public function setGroup(?Group $_group): static
+    {
+        $this->_group = $_group;
+
+        return $this;
     }
 }

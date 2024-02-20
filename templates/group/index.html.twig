@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Group index{% endblock %}
+
+{% block body %}
+    <h1>Group index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>MaxSize</th>
+                <th>CreatedAt</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for group in groups %}
+            <tr>
+                <td>{{ group.code }}</td>
+                <td>{{ group.name }}</td>
+                <td>{{ group.maxSize }}</td>
+                <td>{{ group.createdAt ? group.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_group_show', {'code': group.code}) }}">show</a>
+                    <a href="{{ path('app_group_edit', {'code': group.code}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_group_new') }}">Create new</a>
+{% endblock %}
