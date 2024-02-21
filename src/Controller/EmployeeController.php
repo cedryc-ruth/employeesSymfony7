@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Employee;
 use App\Form\EmployeeType;
 use App\Repository\EmployeeRepository;
+use App\Repository\DemandRepository;
 use App\Repository\GroupRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -46,8 +47,8 @@ class EmployeeController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_employee_show', methods: ['GET'])]
-    public function show(Employee $employee, GroupRepository $groupRepo): Response
-    {
+    public function show(Employee $employee, GroupRepository $groupRepo, Request $request, DemandRepository $repo): Response
+    {  
         //Sécuriser l'accès à la fonctionnalité
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
@@ -157,6 +158,7 @@ class EmployeeController extends AbstractController
         
         //Retirer le membre du groupe
         //$employee->setGroup(null);      //INCORRECT
+
         $employee->getGroup()->removeEmployee($employee);
 
         //Persister les modifications
@@ -167,5 +169,15 @@ class EmployeeController extends AbstractController
 
         //Rediriger vers la page de profil
         return $this->redirectToRoute('app_employee_show', ["id" => $employee->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{id}/project_leave', name: 'app_employee_project_leave', methods: ['POST'])]
+    public function projectLeave(Request $request, Employee $employee, EntityManagerInterface $entityManager): Response
+    {
+        dd($request);
+
+        $projectId = $request->request->get('projectId');
+
+        $project = $repo->find($projectId);
     }
 }

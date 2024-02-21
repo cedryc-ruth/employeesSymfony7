@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Group;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Query\ResultSetMapping;
 
 /**
  * @extends ServiceEntityRepository<Group>
@@ -26,17 +27,6 @@ class GroupRepository extends ServiceEntityRepository
     */
    public function findAvailableGroups(): array
    {
-    /*    $conn = $this->getEntityManager()->getConnection();
-
-        $sql = '
-            SELECT groups.*, COUNT(*) AS total FROM `groups` INNER JOIN `members` ON groups.code=members.group_code GROUP BY groups.code HAVING total < max_size
-            ';
-
-        $resultSet = $conn->executeQuery($sql);
-
-        // returns an array of arrays (i.e. a raw data set)
-        return $resultSet->fetchAllAssociative();
-    */
        return $this->createQueryBuilder('g')
             ->select('g','count(g.code) as total')
             ->innerJoin('g.employees','m')

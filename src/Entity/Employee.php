@@ -50,8 +50,6 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email]
     private ?string $email = null;
 
-    #[ORM\OneToMany(mappedBy: 'employe', targetEntity: Demand::class)]
-    private Collection $demands;
 
     #[ORM\Column]
     private array $roles = [];
@@ -66,9 +64,20 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\JoinColumn(name: 'group_code', referencedColumnName: 'code')]
     private ?Group $_group = null;
 
+    #[ORM\OneToMany(mappedBy: 'employee', targetEntity: Demand::class)]
+    private Collection $demands;
+
+    #[ORM\ManyToMany(targetEntity: Project::class, mappedBy: 'employees')]
+    private Collection $projects;
+
+    #[ORM\OneToMany(mappedBy: 'leader', targetEntity: Project::class)]
+    private Collection $myProjects;
+
     public function __construct()
     {
         $this->demands = new ArrayCollection();
+        $this->projects = new ArrayCollection();
+        $this->myProjects = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -260,6 +269,63 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     public function setGroup(?Group $_group): static
     {
         $this->_group = $_group;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Project>
+     */
+    public function getProjects(): Collection
+    {
+        return $this->projects;
+    }
+
+    public function addProject(Project $project): static
+    {
+        if (!$this->projects->contains($project)) {
+            $this->projects->add($project);
+            $project->addEmployee($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProject(Project $project): static
+    {
+        if ($this->projects->removeElement($project)) {
+            $project->removeEmployee($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Project>
+     */
+    public function getMyProjects(): Collection
+    {
+        return $this->myProjects;
+    }
+
+    public function addMyProject(Project $myProject): static
+    {
+        if (!$this->myProjects->contains($myProject)) {
+            $this->myProjects->add($myProject);
+            $myProject->setLeader($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMyProject(Project $myProject): static
+    {
+        if ($this->myProjects->removeElement($myProject)) {
+            // set the owning side to null (unless already changed)
+            if ($myProject->getLeader() === $this) {
+                $myProject->setLeader(null);
+            }
+        }
 
         return $this;
     }

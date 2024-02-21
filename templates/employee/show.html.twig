@@ -51,6 +51,20 @@
                 <tr>
                     <th>Birthday:</th>
                     <td>{{ employee.birthDate ? employee.birthDate|date('d/m/Y') : '' }}</td>
+                </tr> 
+                <tr>
+                    <th>Mes projets:</th>
+                    <td>
+                        <ul>
+                        {% for project in employee.projects %}
+                            <li>{{ project.name }}
+                                <form action="{{ path('app_employee_project_leave', {'id': employee.id}) }}" method="post">
+                                    <button name="projectId" value="{{ project.id }}">Retirer</button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    </td>
                 </tr>                
             </tbody>
         </table>

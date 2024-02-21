@@ -13,10 +13,7 @@ class Demand
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'demands')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Employee $employe = null;
-
+   
     #[ORM\Column(length: 60)]
     private ?string $type = null;
 
@@ -25,6 +22,10 @@ class Demand
 
     #[ORM\Column(nullable: true)]
     private ?bool $status = null;
+
+    #[ORM\ManyToOne(inversedBy: 'demands')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Employee $employee = null;
 
     public function getId(): ?int
     {
@@ -75,6 +76,18 @@ class Demand
     public function setStatus(?bool $status): static
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getEmployee(): ?Employee
+    {
+        return $this->employee;
+    }
+
+    public function setEmployee(?Employee $employee): static
+    {
+        $this->employee = $employee;
 
         return $this;
     }
