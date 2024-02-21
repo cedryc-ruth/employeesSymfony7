@@ -28,12 +28,14 @@ class EmployeeRepository extends ServiceEntityRepository
    {
     //Les employés qui ne participent pas au projet passé en paramètre
     //SELECT * FROM `members` LEFT JOIN emp_project ON members.emp_no=emp_project.emp_no GROUP BY members.emp_no HAVING project_id!='1' OR project_id IS NULL;
+    //--> un peu compliqué à traduire
+
+    //--> plus facile avec une sous-requête
+    //SELECT * FROM `members` WHERE members.emp_no
+    //NOT IN ( SELECT DISTINCT members.emp_no FROM `members` INNER JOIN emp_project ON members.emp_no=emp_project.emp_no WHERE project_id='1' );
         return $this->createQueryBuilder('e')
-                ->leftJoin('e.empProjects', 'ep')
-                ->groupBy('e.id')
-                ->having('ep.project != :id')
+                ->where('e.id NOT IN (SELECT DISTINCT em.id FROM App\Entity\Employee em INNER JOIN em.empProjects ep WHERE ep.project = :id)')
                 ->setParameter('id', $projectId)
-                ->orHaving('ep.project IS NULL')
                ->orderBy('e.id', 'ASC')
                ->getQuery()
                ->getResult()

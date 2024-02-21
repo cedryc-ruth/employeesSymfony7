@@ -48,7 +48,7 @@ class ProjectController extends AbstractController
     {
         //Récupérer les employés qui ne sont pas déjà dans ce projet
         $otherEmployees = $empRepo->findEmployeesNotYetInProject($project->getId());    //dd($otherEmployees);
-        
+
         return $this->render('project/show.html.twig', [
             'project' => $project,
             'otherEmployees' => $otherEmployees,
