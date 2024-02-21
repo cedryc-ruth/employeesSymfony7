@@ -3,8 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Project;
-use App\Form\Project1Type;
+use App\Form\ProjectType;
 use App\Repository\ProjectRepository;
+use App\Repository\EmployeeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +27,7 @@ class ProjectController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $project = new Project();
-        $form = $this->createForm(Project1Type::class, $project);
+        $form = $this->createForm(ProjectType::class, $project);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -43,17 +44,21 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_project_show', methods: ['GET'])]
-    public function show(Project $project): Response
+    public function show(Project $project, EmployeeRepository $empRepo): Response
     {
+        //Récupérer les employés qui ne sont pas déjà dans ce projet
+        $otherEmployees = $empRepo->findEmployeesNotYetInProject($project->getId());    //dd($otherEmployees);
+        
         return $this->render('project/show.html.twig', [
             'project' => $project,
+            'otherEmployees' => $otherEmployees,
         ]);
     }
 
     #[Route('/{id}/edit', name: 'app_project_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Project $project, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(Project1Type::class, $project);
+        $form = $this->createForm(ProjectType::class, $project);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

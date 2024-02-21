@@ -3,9 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\Employee;
+use App\Entity\Project;
 use App\Form\EmployeeType;
 use App\Repository\EmployeeRepository;
-use App\Repository\DemandRepository;
+use App\Repository\ProjectRepository;
 use App\Repository\GroupRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -47,13 +48,13 @@ class EmployeeController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_employee_show', methods: ['GET'])]
-    public function show(Employee $employee, GroupRepository $groupRepo, Request $request, DemandRepository $repo): Response
+    public function show(Employee $employee, GroupRepository $groupRepo, Request $request): Response
     {  
         //Sécuriser l'accès à la fonctionnalité
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        //Autorisation d'accès au profil personnel seulement
-        if($employee->getId() != $this->getUser()->getId()) {
+        //Autorisation d'accès au profil personnel seulement SAUF si on est administrateur
+        if(!$this->getUser()->isAdmin() && $employee->getId() != $this->getUser()->getId()) {
             //Afficher un message de notification
             $this->addFlash('notice','Vous ne pouvez accéder qu\'à votre propre profil.');
 
@@ -172,12 +173,113 @@ class EmployeeController extends AbstractController
     }
 
     #[Route('/{id}/project_leave', name: 'app_employee_project_leave', methods: ['POST'])]
-    public function projectLeave(Request $request, Employee $employee, EntityManagerInterface $entityManager): Response
+    public function projectLeave(Request $request, Employee $employee, ProjectRepository $projectRepo, EntityManagerInterface $entityManager): Response
     {
-        dd($request);
+        //Sécuriser l'accès à la fonctionnalité
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');   //Seulement les membres connectés
 
-        $projectId = $request->request->get('projectId');
+        //Récupérer la value du champ de formulaire nommé 'projectId' (<button name="projectId" value="...">)
+        $projectId = $request->get('projectId');
 
-        $project = $repo->find($projectId);
+        //Récupérer le projet
+        $project = $projectRepo->find($projectId);      //dd($project);
+
+        //Autorisation d'accès : seul l'administrateur ou le leader du projet peut retirer des membres
+        if(!$this->getUser()->isAdmin() && $this->getUser() != $project->getLeader()) {
+            //Afficher un message de notification
+            $this->addFlash('notice','Vous devez être chef de projet pour vous retirer du groupe.');
+
+            return $this->redirectToRoute('app_employee_show', ["id" => $this->getUser()->getId()], Response::HTTP_SEE_OTHER);
+        }
+
+        //Retirer l'employé du projet
+        $project->removeEmployee($employee);        //L'admin ou le chef de projet le retire du projet
+
+        if($employee == $project->getLeader()) {    //Si l'employé était aussi le chef de projet
+            $project->setLeader(null);              //Il n'est plus chef de projet
+        }
+
+        //Persister les modifications
+        $entityManager->flush();
+
+        //Afficher un message de notification
+        $this->addFlash('notice','Membre retiré du projet.');
+
+        //Rediriger vers la page de profil
+        return $this->redirectToRoute('app_employee_show', ["id" => $employee->getId()], Response::HTTP_SEE_OTHER);
     }
+
+    #[Route('/{id}/project_join', name: 'app_employee_project_join', methods: ['POST'])]
+    public function projectJoin(Request $request, Employee $employee, ProjectRepository $projectRepo, EntityManagerInterface $entityManager): Response
+    {
+        //Récupérer la value du champ de formulaire nommé 'projectId' (<button name="projectId" value="...">)
+        $projectId = $request->get('projectId');
+
+        //Récupérer le projet
+        $project = $projectRepo->find($projectId);      //dd($project);
+
+        //Ajouter l'employé qu projet
+        $project->addEmployee($employee);
+
+        //Persister les modifications
+        $entityManager->flush();
+
+        //Afficher un message de notification
+        $this->addFlash('notice','Membre ajouté au projet.');
+
+        //Rediriger vers la page du projet
+        return $this->redirectToRoute('app_project_show', ["id" => $project->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{id}/project_leader', name: 'app_employee_project_leader', methods: ['POST'])]
+    public function projectLeader(Request $request, Employee $employee, ProjectRepository $projectRepo, EntityManagerInterface $entityManager): Response
+    {
+        //Sécuriser l'accès à la fonctionnalité
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');   //Seulement l'administrateur
+
+        //Récupérer la value du champ de formulaire nommé 'projectId' (<button name="projectId" value="...">)
+        $projectId = $request->get('projectId');
+
+        //Récupérer le projet
+        $project = $projectRepo->find($projectId);      //dd($project);
+
+        //Nommer l'employé chef du projet
+        $project->setLeader($employee);             //Il devient chef de projet
+        $project->addEmployee($employee);           //Il est ajouté au projet
+
+        //Persister les modifications
+        $entityManager->flush();
+
+        //Afficher un message de notification
+        $this->addFlash('notice','Membre ajouté et nommé chef du projet.');
+
+        //Rediriger vers la page de profil
+        return $this->redirectToRoute('app_employee_show', ["id" => $employee->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{id}/project_add', name: 'app_employee_project_add', methods: ['POST'])]
+    public function projectAdd(Request $request, Project $project, EmployeeRepository $empRepo, EntityManagerInterface $entityManager): Response
+    {
+        //Sécuriser l'accès à la fonctionnalité
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');   //Seulement l'administrateur
+
+        //Récupérer la value du champ de formulaire nommé 'projectId' (<button name="projectId" value="...">)
+        $employeeId = $request->get('employeeId');
+
+        //Récupérer l'employé
+        $employee = $empRepo->find($employeeId);      //dd($employee);
+
+        //Ajouter l'employé au projet
+        $project->addEmployee($employee);           //Il est ajouté au projet
+
+        //Persister les modifications
+        $entityManager->flush();
+
+        //Afficher un message de notification
+        $this->addFlash('notice','Membre ajouté au projet.');
+
+        //Rediriger vers la page de profil
+        return $this->redirectToRoute('app_project_show', ["id" => $project->getId()], Response::HTTP_SEE_OTHER);
+    }
+
 }

@@ -17,7 +17,7 @@
             </tr>
             <tr>
                 <th>Leader</th>
-                <td>{{ project.leader.firstName ~ ' ' ~ project.leader.lastName }}</td>
+                <td>{{ project.leader ? project.leader.firstName ~ ' ' ~ project.leader.lastName : '' }}</td>
             </tr>
             <tr>
                 <th>Participants</th>
@@ -25,12 +25,37 @@
                     <ul>
                     {% for employee in project.employees %}
                         <li>{{ employee.firstName }} {{ employee.lastName }}</li>
+                    {% else %}
+                        <li><em>Aucun participant.</em></li>
                     {% endfor %}
                     </ul>
                 </td>
             </tr>
         </tbody>
     </table>
+
+{# Afficher un bouton si le membre est connecté et qu'il ne participe pas déjà au projet #}
+{% if app.user and app.user not in project.employees %}
+    <form action="{{ path('app_employee_project_join', {'id': app.user.id }) }}" method="post">
+        <button name="projectId" value="{{ project.id }}">Participer au projet</button>
+    </form>
+{% endif %}
+
+
+{# Afficher un formulaire d'ajout seulement si le projet n'a pas déjà 3 participants #}
+{% if project.employees|length < 3 %}
+    <form action="{{ path('app_employee_project_add', {'id': project.id }) }}" method="post">
+
+        {# Afficher une liste des membres qui ne participent pas déjà au projet #}
+        <select name="employeeId">
+            <option></option>
+        {% for employee in otherEmployees %}
+            <option value="{{ employee.id }}">{{ employee }}</option>
+        {% endfor %}
+        </select>
+        <button>Ajouter au projet</button>
+    </form>
+{% endif %}
 
     <a href="{{ path('app_project_index') }}">back to list</a>
 

@@ -21,6 +21,25 @@ class EmployeeRepository extends ServiceEntityRepository
         parent::__construct($registry, Employee::class);
     }
 
+    /**
+    * @return Employee[] Returns an array of Project objects
+    */
+   public function findEmployeesNotYetInProject($projectId): array
+   {
+    //Les employés qui ne participent pas au projet passé en paramètre
+    //SELECT * FROM `members` LEFT JOIN emp_project ON members.emp_no=emp_project.emp_no GROUP BY members.emp_no HAVING project_id!='1' OR project_id IS NULL;
+        return $this->createQueryBuilder('e')
+                ->leftJoin('e.empProjects', 'ep')
+                ->groupBy('e.id')
+                ->having('ep.project != :id')
+                ->setParameter('id', $projectId)
+                ->orHaving('ep.project IS NULL')
+               ->orderBy('e.id', 'ASC')
+               ->getQuery()
+               ->getResult()
+           ;
+   }
+
 //    /**
 //     * @return Employee[] Returns an array of Employee objects
 //     */

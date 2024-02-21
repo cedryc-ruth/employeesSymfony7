@@ -73,11 +73,15 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'leader', targetEntity: Project::class)]
     private Collection $myProjects;
 
+    #[ORM\OneToMany(mappedBy: 'employee', targetEntity: EmpProject::class)]
+    private Collection $empProjects;
+
     public function __construct()
     {
         $this->demands = new ArrayCollection();
         $this->projects = new ArrayCollection();
         $this->myProjects = new ArrayCollection();
+        $this->empProjects = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -324,6 +328,36 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($myProject->getLeader() === $this) {
                 $myProject->setLeader(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EmpProject>
+     */
+    public function getEmpProjects(): Collection
+    {
+        return $this->empProjects;
+    }
+
+    public function addEmpProject(EmpProject $empProject): static
+    {
+        if (!$this->empProjects->contains($empProject)) {
+            $this->empProjects->add($empProject);
+            $empProject->setEmployee($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEmpProject(EmpProject $empProject): static
+    {
+        if ($this->empProjects->removeElement($empProject)) {
+            // set the owning side to null (unless already changed)
+            if ($empProject->getEmployee() === $this) {
+                $empProject->setEmployee(null);
             }
         }
 

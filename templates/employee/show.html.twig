@@ -53,19 +53,47 @@
                     <td>{{ employee.birthDate ? employee.birthDate|date('d/m/Y') : '' }}</td>
                 </tr> 
                 <tr>
-                    <th>Mes projets:</th>
+                    <th>Projets:<br> <em>en tant que participant</em></th>
                     <td>
                         <ul>
                         {% for project in employee.projects %}
-                            <li>{{ project.name }}
+                            <li><strong>{{ project.name }}</strong> - Chef de projet : {{ project.leader }}
+                            
+                            {# Seul l'administrateur ou le chef de projet peut se retirer d'un projet #}
+                            {% if is_granted('ROLE_ADMIN') or app.user == project.leader %}
                                 <form action="{{ path('app_employee_project_leave', {'id': employee.id}) }}" method="post">
-                                    <button name="projectId" value="{{ project.id }}">Retirer</button>
+                                    <button name="projectId" value="{{ project.id }}">Se retirer</button>
                                 </form>
+                            {% endif %}
+
+                            {# Seul l'administrateur peut nommer un chef de projet #}
+                            {% if is_granted('ROLE_ADMIN') %}
+                                {# On affiche le bouton seulement si on n'est pas déjà chef de ce projet #}
+                                {% if app.user and app.user != project.leader %}
+                                <form action="{{ path('app_employee_project_leader', {'id': employee.id}) }}" method="post">
+                                    <button name="projectId" value="{{ project.id }}">Nommer chef de projet</button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
                             </li>
+                        {% else %}
+                            <li><em>Aucun projet.</em></li>
                         {% endfor %}
                         </ul>
                     </td>
-                </tr>                
+                </tr>
+                <tr>
+                    <th>Mes projets:<br> <em>en tant que leader</em></th>
+                    <td>
+                        <ul>
+                        {% for project in employee.myProjects %}
+                            <li><strong>{{ project.name }}</strong> - Chef de projet : {{ project.leader }}</li>
+                        {% else %}
+                            <li><em>Aucun projet.</em></li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </section>

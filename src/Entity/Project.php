@@ -29,9 +29,13 @@ class Project
     #[ORM\JoinColumn(name: 'leader', referencedColumnName: 'emp_no')]
     private ?Employee $leader = null;
 
+    #[ORM\OneToMany(mappedBy: 'project', targetEntity: EmpProject::class)]
+    private Collection $empProjects;
+
     public function __construct()
     {
         $this->employees = new ArrayCollection();
+        $this->empProjects = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -83,6 +87,36 @@ class Project
     public function setLeader(?Employee $leader): static
     {
         $this->leader = $leader;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EmpProject>
+     */
+    public function getEmpProjects(): Collection
+    {
+        return $this->empProjects;
+    }
+
+    public function addEmpProject(EmpProject $empProject): static
+    {
+        if (!$this->empProjects->contains($empProject)) {
+            $this->empProjects->add($empProject);
+            $empProject->setProject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEmpProject(EmpProject $empProject): static
+    {
+        if ($this->empProjects->removeElement($empProject)) {
+            // set the owning side to null (unless already changed)
+            if ($empProject->getProject() === $this) {
+                $empProject->setProject(null);
+            }
+        }
 
         return $this;
     }
