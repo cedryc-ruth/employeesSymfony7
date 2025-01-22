@@ -14,10 +14,11 @@
     </head>
     <body>
         <ul>
-        {% if not app.user %}
+        {% if not is_granted('IS_AUTHENTICATED_FULLY') %}
             <li><a href="{{ path('app_login') }}">Se connecter</a></li>
         {% else %} 
             <li><a href="/logout">Mon profil</a></li>
+            <li><a href="{{ path('app_mission_mes_missions') }}">Mes missions</a></li>
             <li><a href="/logout">Se déconnecter</a></li>
         {% endif %}
         </ul>

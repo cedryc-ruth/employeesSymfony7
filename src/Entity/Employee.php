@@ -76,12 +76,19 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'employee', targetEntity: EmpProject::class)]
     private Collection $empProjects;
 
+    /**
+     * @var Collection<int, Mission>
+     */
+    #[ORM\ManyToMany(targetEntity: Mission::class, mappedBy: 'employees')]
+    private Collection $missions;
+
     public function __construct()
     {
         $this->demands = new ArrayCollection();
         $this->projects = new ArrayCollection();
         $this->myProjects = new ArrayCollection();
         $this->empProjects = new ArrayCollection();
+        $this->missions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -359,6 +366,33 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
             if ($empProject->getEmployee() === $this) {
                 $empProject->setEmployee(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Mission>
+     */
+    public function getMissions(): Collection
+    {
+        return $this->missions;
+    }
+
+    public function addMission(Mission $mission): static
+    {
+        if (!$this->missions->contains($mission)) {
+            $this->missions->add($mission);
+            $mission->addEmployee($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMission(Mission $mission): static
+    {
+        if ($this->missions->removeElement($mission)) {
+            $mission->removeEmployee($this);
         }
 
         return $this;

@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mission index{% endblock %}
+
+{% block body %}
+    <h1>Mission index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Description</th>
+                <th>Due_date</th>
+                <th>Status</th>
+                <th>Taken by</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for mission in missions %}
+            <tr>
+                <td>{{ mission.id }}</td>
+                <td>{{ mission.description }}</td>
+                <td>{{ mission.dueDate ? mission.dueDate|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ mission.status }}</td>
+                <td>
+                    <ul>
+                    {% for employee in mission.employees %}
+                        <li>{{ employee.firstName }} {{ employee.lastName }}</li>
+                    {% endfor %}
+                    </ul>
+                </td>
+                <td>
+                    <form action="{{ path('app_mission_update', {'id': mission.id}) }}" method="post">
+                    {% if is_granted('IS_AUTHENTICATED_FULLY') and mission.status!='done' %}
+                        {% if mission.status=='ongoing' and app.user in mission.employees %}
+                        <button name="action" style="background-color:lightgreen" value="btTerminer">Terminer</button>
+                        {% elseif mission.status=='ongoing' and app.user not in mission.employees %}
+                        <button name="action" style="background-color:orange" value="btRejoindre">Rejoindre</button>
+                        {% elseif mission.status=='not taken' and app.user not in mission.employees %}
+                        <button name="action"style="background-color:lightblue" value="btAccepter">Accepter</button>
+                        {% endif %}
+                    {% endif %}
+                    </form>
+                </td>
+                <td>
+                    <a href="{{ path('app_mission_show', {'id': mission.id}) }}">show</a>
+                    <a href="{{ path('app_mission_edit', {'id': mission.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_mission_new') }}">Create new</a>
+{% endblock %}
