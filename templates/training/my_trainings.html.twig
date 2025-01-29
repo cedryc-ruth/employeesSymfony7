@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Training index{% endblock %}
+
+{% block body %}
+    <h1>Training index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Title</th>
+                <th>Duration</th>
+                <th>Places</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for training in trainings %}
+            <tr>
+                <td>{{ training.code }}</td>
+                <td>{{ training.title }}</td>
+                <td>{{ training.duration }}</td>
+                <td>{{ training.places }}</td>
+                <td>
+                {% if training.code in subscribableTraining %}
+                    <form method="post" action="{{ path('app_training_subscribe', {'code': training.code}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('signin4training' ~ training.code) }}">
+                        <button class="btn" style="background-color:lightblue;border-color:darkblue">S'inscrire</button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{{ path('app_training_unsubscribe', {'code': training.code}) }}" onsubmit="return confirm('Are you sure you want to delete this item?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('signin4training' ~ training.code) }}">
+                        <button class="btn" style="background-color:silver;border-color:gray">Se désinscrire</button>
+                    </form>
+                {% endif %}
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_training_new') }}">Create new</a>
+{% endblock %}

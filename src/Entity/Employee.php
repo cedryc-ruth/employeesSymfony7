@@ -17,7 +17,7 @@ enum Gender: string {
     case Non_Binary = 'X';
 }
 
-#[ORM\Table('members')]
+#[ORM\Table('employees')]
 #[ORM\Entity(repositoryClass: EmployeeRepository::class)]
 class Employee implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -60,10 +60,6 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\ManyToOne(inversedBy: 'employees')]
-    #[ORM\JoinColumn(name: 'group_code', referencedColumnName: 'code')]
-    private ?Group $_group = null;
-
     #[ORM\OneToMany(mappedBy: 'employee', targetEntity: Demand::class)]
     private Collection $demands;
 
@@ -82,6 +78,12 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: Mission::class, mappedBy: 'employees')]
     private Collection $missions;
 
+    /**
+     * @var Collection<int, Training>
+     */
+    #[ORM\ManyToMany(targetEntity: Training::class, mappedBy: 'employees')]
+    private Collection $trainings;
+
     public function __construct()
     {
         $this->demands = new ArrayCollection();
@@ -89,6 +91,7 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
         $this->myProjects = new ArrayCollection();
         $this->empProjects = new ArrayCollection();
         $this->missions = new ArrayCollection();
+        $this->trainings = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -393,6 +396,33 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->missions->removeElement($mission)) {
             $mission->removeEmployee($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Training>
+     */
+    public function getTrainings(): Collection
+    {
+        return $this->trainings;
+    }
+
+    public function addTraining(Training $training): static
+    {
+        if (!$this->trainings->contains($training)) {
+            $this->trainings->add($training);
+            $training->addEmployee($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTraining(Training $training): static
+    {
+        if ($this->trainings->removeElement($training)) {
+            $training->removeEmployee($this);
         }
 
         return $this;
